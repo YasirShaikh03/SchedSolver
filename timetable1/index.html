@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║           SchedSolver — Academic Timetable Generator         ║
+  ║                                                              ║
+  ║  Author  : Yasir Shaikh                                      ║
+  ║  GitHub  : https://github.com/YasirShaikh03                 ║
+  ║  License : MIT                                               ║
+  ║                                                              ║
+  ║  Modes   : Class Timetable + Exam Timetable                  ║
+  ║  Engine  : CSP + Backtracking (fully client-side)            ║
+  ║  Stack   : Pure HTML · CSS · JavaScript — no frameworks      ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SchedSolver — Academic Timetable Generator</title>
+  <meta name="description" content="Constraint-based class and exam timetable generator by Yasir Shaikh" />
+  <meta name="author" content="Yasir Shaikh — https://github.com/YasirShaikh03" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">
+          <div class="logo-icon">⊠</div>
+          SchedSolver
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" onclick="toggleTheme()">
+          <span class="theme-icon" id="themeIcon">☀</span>
+        </button>
+      </div>
+      <div class="subtitle">Constraint-based timetable generator</div>
+
+      <!-- MODE TABS -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabClass"  onclick="switchMode('class')">🗓 Class</button>
+        <button class="mode-tab"        id="tabExam"   onclick="switchMode('exam')">📋 Exam</button>
+      </div>
+
+      <button class="btn btn-sm demo-btn" onclick="loadDemo()">⚙ Load Demo Data</button>
+    </div>
+
+    <!-- TIME CONFIG (shared) -->
+    <div class="section">
+      <div class="section-title">Time Config</div>
+      <div class="row">
+        <div class="field">
+          <label for="numDays">Working Days</label>
+          <input type="number" id="numDays" value="5" min="1" max="7" />
+        </div>
+        <div class="field">
+          <label for="numSlots">Slots / Day</label>
+          <input type="number" id="numSlots" value="6" min="1" max="12" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="dayNames">Day Names <span class="hint">(comma-separated)</span></label>
+        <input type="text" id="dayNames" value="Mon,Tue,Wed,Thu,Fri" />
+      </div>
+      <div class="field">
+        <label for="slotNames">Slot Labels <span class="hint">(comma-separated)</span></label>
+        <input type="text" id="slotNames" value="8-9,9-10,10-11,11-12,12-13,13-14" />
+      </div>
+      <div class="field">
+        <label>Break Slots <span class="hint">(click to toggle)</span></label>
+        <div class="slot-grid" id="breakSlotGrid"></div>
+      </div>
+      <button class="btn btn-sm" onclick="refreshSlotGrid()">↺ Refresh Slots</button>
+    </div>
+
+    <!-- ══════════════ CLASS MODE SECTIONS ══════════════ -->
+
+    <!-- SUBJECTS -->
+    <div class="section class-only">
+      <div class="section-title">Subjects</div>
+      <div class="row3">
+        <div class="field">
+          <label for="subjName">Name</label>
+          <input type="text" id="subjName" placeholder="Math" />
+        </div>
+        <div class="field">
+          <label for="subjLec">Lec / wk</label>
+          <input type="number" id="subjLec" value="4" min="1" />
+        </div>
+        <div class="field field-end">
+          <button class="btn btn-sm full-w" onclick="addSubject()">+ Add</button>
+        </div>
+      </div>
+      <div class="tag-list" id="subjList"></div>
+    </div>
+
+    <!-- TEACHERS -->
+    <div class="section class-only">
+      <div class="section-title">Teachers <span class="hint">(optional)</span></div>
+      <div class="row">
+        <div class="field">
+          <label for="teacherName">Name</label>
+          <input type="text" id="teacherName" placeholder="Dr. Smith" />
+        </div>
+        <div class="field">
+          <label for="teacherSubj">Subject</label>
+          <select id="teacherSubj">
+            <option value="">-- select --</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Available Days</label>
+        <div class="day-checks" id="teacherDays"></div>
+      </div>
+      <button class="btn btn-sm" onclick="addTeacher()">+ Add Teacher</button>
+      <div class="tag-list" id="teacherList"></div>
+    </div>
+
+    <!-- LOCKED SLOTS (CLASS) -->
+    <div class="section class-only">
+      <div class="section-title">Locked Slots</div>
+      <p class="hint-text">Pre-assign a subject to a specific slot before generation.</p>
+      <div class="row3">
+        <div class="field">
+          <label for="lockSubj">Subject</label>
+          <select id="lockSubj"></select>
+        </div>
+        <div class="field">
+          <label for="lockDay">Day</label>
+          <select id="lockDay"></select>
+        </div>
+        <div class="field">
+          <label for="lockSlot">Slot</label>
+          <select id="lockSlot"></select>
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addLock()">🔒 Lock Slot</button>
+      <div class="tag-list" id="lockList"></div>
+    </div>
+
+    <!-- ══════════════ EXAM MODE SECTIONS ══════════════ -->
+
+    <!-- EXAM COURSES -->
+    <div class="section exam-only" style="display:none">
+      <div class="section-title">Exam Courses</div>
+      <div class="row3">
+        <div class="field">
+          <label for="examCourseName">Name</label>
+          <input type="text" id="examCourseName" placeholder="CS101" />
+        </div>
+        <div class="field">
+          <label for="examCourseStudents">Students</label>
+          <input type="number" id="examCourseStudents" value="30" min="1" />
+        </div>
+        <div class="field field-end">
+          <button class="btn btn-sm full-w" onclick="addExamCourse()">+ Add</button>
+        </div>
+      </div>
+      <div class="tag-list" id="examCourseList"></div>
+    </div>
+
+    <!-- EXAM ROOMS -->
+    <div class="section exam-only" style="display:none">
+      <div class="section-title">Exam Rooms <span class="hint">(optional)</span></div>
+      <p class="hint-text">If defined, rooms are auto-assigned by capacity. Leave empty to skip room assignment.</p>
+      <div class="row">
+        <div class="field">
+          <label for="examRoomName">Room / Hall</label>
+          <input type="text" id="examRoomName" placeholder="Hall A" />
+        </div>
+        <div class="field">
+          <label for="examRoomCap">Capacity</label>
+          <input type="number" id="examRoomCap" value="60" min="1" />
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addExamRoom()">+ Add Room</button>
+      <div class="tag-list" id="examRoomList"></div>
+    </div>
+
+    <!-- STUDENT GROUPS -->
+    <div class="section exam-only" style="display:none">
+      <div class="section-title">Student Groups <span class="hint">(conflict sets)</span></div>
+      <p class="hint-text">Courses in the same group share students — they cannot be scheduled at the same time.</p>
+      <div class="row">
+        <div class="field">
+          <label for="examGroupName">Group Name</label>
+          <input type="text" id="examGroupName" placeholder="Year 1 CS" />
+        </div>
+        <div class="field">
+          <label for="examGroupCourse">Add Course</label>
+          <select id="examGroupCourse">
+            <option value="">-- select --</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addExamGroup()">+ Create Group</button>
+      <div class="tag-list" id="examGroupList"></div>
+    </div>
+
+    <!-- EXAM SETTINGS -->
+    <div class="section exam-only" style="display:none">
+      <div class="section-title">Exam Settings</div>
+      <div class="row">
+        <div class="field">
+          <label for="examMinGap">Min Gap (days)</label>
+          <input type="number" id="examMinGap" value="1" min="0" max="7" title="Minimum days between two exams for same group" />
+        </div>
+        <div class="field">
+          <label for="examMaxPerDay">Max Exams / Day</label>
+          <input type="number" id="examMaxPerDay" value="4" min="1" max="20" title="Max exams scheduled on a single day" />
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCKED EXAMS -->
+    <div class="section exam-only" style="display:none">
+      <div class="section-title">Locked Exams</div>
+      <p class="hint-text">Pre-schedule a course exam to a fixed day/slot.</p>
+      <div class="row3">
+        <div class="field">
+          <label for="examLockCourse">Course</label>
+          <select id="examLockCourse"></select>
+        </div>
+        <div class="field">
+          <label for="examLockDay">Day</label>
+          <select id="examLockDay"></select>
+        </div>
+        <div class="field">
+          <label for="examLockSlot">Slot</label>
+          <select id="examLockSlot"></select>
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addExamLock()">🔒 Lock Exam</button>
+      <div class="tag-list" id="examLockList"></div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="generate()">▶ Generate</button>
+        <button class="btn btn-danger"  onclick="reset()">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Configure and click Generate</span>
+    </div>
+
+  </aside>
+  <!-- ════════════════════════════ END SIDEBAR ════════════════════════════ -->
+
+
+  <!-- ════════════════════════════════ MAIN ════════════════════════════════ -->
+  <main class="main">
+
+    <div class="main-header">
+      <div>
+        <h1 class="main-title" id="mainTitle">Class Timetable</h1>
+        <div class="main-subtitle" id="mainSubtitle">CSP + Backtracking solver</div>
+      </div>
+      <div class="btn-group" id="mainActions" style="display:none">
+        <button class="btn btn-sm" onclick="stepViz()" id="vizBtn">▶ Step Viz</button>
+        <button class="btn btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-sm" onclick="printTimetable()">🖨 Print</button>
+      </div>
+    </div>
+
+    <!-- ALERT BOX -->
+    <div id="alertBox"></div>
+
+    <!-- CONFLICT SUMMARY (exam mode) -->
+    <div id="conflictSummary" style="display:none"></div>
+
+    <!-- STATS -->
+    <div class="stats" id="statsRow" style="display:none">
+      <div class="stat">
+        <div class="stat-val" id="statAttempts">0</div>
+        <div class="stat-label">Backtracks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statPlacements">0</div>
+        <div class="stat-label">Placements</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statTime">0ms</div>
+        <div class="stat-label">Solve Time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statTotal">0/0</div>
+        <div class="stat-label">Slots Filled</div>
+      </div>
+      <div class="stat" id="statConflictsWrap" style="display:none">
+        <div class="stat-val stat-green" id="statConflicts">0</div>
+        <div class="stat-label">Conflicts</div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend" id="legendRow" style="display:none"></div>
+
+    <!-- TIMETABLE OUTPUT -->
+    <div id="timetableArea">
+      <div class="empty-state">
+        <div class="empty-icon">⊠</div>
+        <div class="empty-title">No timetable yet</div>
+        <div class="empty-sub">Choose a mode (Class or Exam), add your data, then click <strong>Generate</strong> to run the backtracking algorithm.</div>
+      </div>
+    </div>
+
+    <!-- PRINT FOOTER (hidden in screen, shown in print) -->
+    <div class="print-footer">
+      Generated by SchedSolver · Author: Yasir Shaikh · github.com/YasirShaikh03
+    </div>
+
+  </main>
+  <!-- ══════════════════════════════ END MAIN ══════════════════════════════ -->
+
+</div><!-- .app -->
+
+<!-- Author: Yasir Shaikh | https://github.com/YasirShaikh03 -->
+<script src="app.js"></script>
+</body>
+</html>
