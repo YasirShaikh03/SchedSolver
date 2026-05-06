@@ -122,18 +122,7 @@ SchedSolver uses a **recursive backtracking CSP solver** with two specialised va
 7. Click **Generate** — solver schedules all exams conflict-free.
 8. The **Conflict Summary** confirms that all group constraints are satisfied.
 
----
 
-## 🖥 Browser Compatibility
-
-| Browser | Support |
-|---|---|
-| Chrome / Edge 90+ | ✅ Full |
-| Firefox 88+ | ✅ Full |
-| Safari 14+ | ✅ Full |
-| Mobile browsers | ✅ Responsive |
-
----
 
 ## 🤝 Contributing
 
@@ -147,6 +136,20 @@ git checkout -b feature/your-feature
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ---
+
+---
+
+## 🖥 Browser Compatibility
+
+| Browser | Support |
+|---|---|
+| Chrome / Edge 90+ | ✅ Full |
+| Firefox 88+ | ✅ Full |
+| Safari 14+ | ✅ Full |
+| Mobile browsers | ✅ Responsive |
+
+---
+
 
 ## 📄 License
 
