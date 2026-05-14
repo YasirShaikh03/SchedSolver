@@ -160,9 +160,7 @@ Free to use, modify, and distribute with attribution.
 
 ## 👤 Author
 
-**Yasir Shaikh**  
-GitHub: [https://github.com/YasirShaikh03](https://github.com/YasirShaikh03)
-
+> **Author:** Yasir Shaikh &nbsp;|&nbsp; **GitHub:** [YasirShaikh03](https://github.com/YasirShaikh03) &nbsp;|&nbsp; **License:** MIT
 ---
 
 ## 🌟 Acknowledgements
